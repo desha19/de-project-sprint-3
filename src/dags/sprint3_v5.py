@@ -106,7 +106,7 @@ def upload_data_to_staging(filename, date, pg_table, pg_schema, ti):
     rows_to_reload_list = ', '.join([f"'{i}'" for i in df['uniq_id']])
 
     # Удаляем строки с совпадающими uniq_id
-    delete_query = f"DELETE FROM {pg_schema}.{pg_table} WHERE uniq_id IN ({rows_to_reload_list})"
+    delete_query = f"delete from {pg_schema}.{pg_table} where uniq_id IN ({rows_to_reload_list})"
     engine.execute(delete_query)
     ##
 
@@ -197,7 +197,8 @@ with DAG(
     update_mart_f_customer_retention = PostgresOperator(
         task_id='update_f_customer_retention',
         postgres_conn_id=postgres_conn_id,
-        sql="sql/mart.f_customer_retention.sql")   
+        sql="sql/mart.f_customer_retention.sql",
+        parameters={"date": {business_dt}})   # Добавил параметр для инкрементального удаления и загрузки данных
 
     update_f_sales = PostgresOperator(
         task_id='update_f_sales',
@@ -212,6 +213,6 @@ with DAG(
             >> get_increment
             >> upload_user_order_inc
             >> [update_d_item_table, update_d_city_table, update_d_customer_table]
-            >> update_mart_f_customer_retention 
             >> update_f_sales
+            >> update_mart_f_customer_retention
     )
