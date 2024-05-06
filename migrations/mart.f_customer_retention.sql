@@ -19,7 +19,7 @@ select count(distinct case when mfs.quantity = 1 then mfs.customer_id else null 
 	sum(case when mfs.status = 'refunded' then mfs.payment_amount else 0 end) as customers_refunded --количество возвратов клиентов
 from mart.f_sales mfs --исправил, данные теперь беруться из таблицы f_sales
 left join mart.d_calendar as dc on mfs.date_id = dc.date_id
-where dc.date_actual = '{{ds}}' --условие для инкрементарного наполения таблицы
+where dc.date_actual >= date_trunc('week', '{{ds}}'::timestamp) --условие для инкрементарного наполения таблицы
 group by dc.week_of_year,
 		 dc.month_actual,
 	     mfs.item_id;
